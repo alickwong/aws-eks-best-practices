@@ -1,3 +1,5 @@
+!!! 注意
+    本页面的内容是基于英文版本使用 Claude 3 生成的。如有差异,以英文版本为准。
 
 # 集群服务
 
@@ -19,9 +21,9 @@ api.example.cluster.local
 api.example.<region>.compute.internal
 ```
 
-`命名空间`和`区域`值将被替换为您的工作负载命名空间和计算区域。根据您的集群设置,您可能有其他搜索域。
+`命名空间`和`区域`值将被替换为您的工作负载命名空间和您的计算区域。根据您的集群设置,您可能有其他搜索域。
 
-您可以通过[降低工作负载的ndots选项](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config)或完全限定域请求(例如`api.example.com.`)来减少对CoreDNS的请求数量。如果您的工作负载通过DNS连接到外部服务,我们建议将ndots设置为2,以便工作负载不会在集群内部进行不必要的集群DNS查询。如果工作负载不需要访问集群内部的服务,您可以设置不同的DNS服务器和搜索域。
+您可以通过[降低工作负载的ndots选项](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config)或通过在域请求中包含尾部 . (例如 `api.example.com.`)来减少对CoreDNS的请求数量。如果您的工作负载通过DNS连接到外部服务,我们建议将ndots设置为2,以便工作负载不会在集群内部进行不必要的集群DNS查询。如果工作负载不需要访问集群内部的服务,您可以设置不同的DNS服务器和搜索域。
 ```
 spec:
   dnsPolicy: "None"
@@ -33,7 +35,7 @@ spec:
 ```
 
 
-如果您将 ndots 降低到太低的值或您正在连接的域不包含足够的特定性(包括尾部 .)，则可能会导致 DNS 查找失败。请确保您测试此设置将如何影响您的工作负载。
+如果您将 ndots 降低到太低的值或您正在连接的域不包含足够的特定性(包括尾部 .)，则可能会导致 DNS 查找失败。请确保您测试了此设置将如何影响您的工作负载。
 
 ### 水平扩展 CoreDNS
 
@@ -49,18 +51,18 @@ Metrics Server 会保留它收集、聚合和提供的数据。随着集群的�
 
 ## CoreDNS 延迟退出持续时间
 
-Pods 使用 `kube-dns` 服务进行名称解析。Kubernetes 使用目标 NAT (DNAT) 将 `kube-dns` 流量从节点重定向到 CoreDNS 后端 pods。当您扩展 CoreDNS 部署时,`kube-proxy` 会更新节点上的 iptables 规则和链,以将 DNS 流量重定向到 CoreDNS pods。在您扩展 CoreDNS 时传播新的端点以及删除规则可能需要 1 到 10 秒,具体取决于集群的大小。
-这种传播延迟可能会导致 CoreDNS pod 被终止时 DNS 查找失败,但节点的 iptables 规则尚未更新。在这种情况下,节点可能会继续向已终止的 CoreDNS Pod 发送 DNS 查询。
+Pods 使用 `kube-dns` 服务进行名称解析。Kubernetes 使用目标 NAT (DNAT) 将 `kube-dns` 流量从节点重定向到 CoreDNS 后端 pods。当您扩展 CoreDNS 部署时, `kube-proxy` 会更新节点上的 iptables 规则和链,以将 DNS 流量重定向到 CoreDNS pods。在您扩展时传播新的端点,以及在缩减 CoreDNS 时删除规则,这可能需要 1 到 10 秒,具体取决于集群的大小。
+这种传播延迟可能会导致 CoreDNS pod 被终止时 DNS 查找失败,但节点的 iptables 规则尚未更新。在这种情况下,节点可能继续向已终止的 CoreDNS Pod 发送 DNS 查询。
 
 您可以通过在 CoreDNS pod 中设置 [lameduck](https://coredns.io/plugins/health/) 持续时间来减少 DNS 查找失败。在 lameduck 模式下,CoreDNS 将继续响应正在进行的请求。设置 lameduck 持续时间将延迟 CoreDNS 关闭过程,为节点更新其 iptables 规则和链条提供所需的时间。
 
 我们建议将 CoreDNS lameduck 持续时间设置为 30 秒。
 
-## CoreDNS 就绪探测
+## CoreDNS 就绪探针
 
-我们建议对 CoreDNS 的就绪探测使用 `/ready` 而不是 `/health`。
+我们建议对 CoreDNS 的就绪探针使用 `/ready` 而不是 `/health`。
 
-为了与前面建议的将 lameduck 持续时间设置为 30 秒的建议保持一致,从而为节点的 iptables 规则更新提供充足的时间,在 pod 终止之前,使用 `/ready` 而不是 `/health` 进行 CoreDNS 就绪探测可确保 CoreDNS pod 在启动时已完全准备就绪,可以及时响应 DNS 请求。
+为了与前面建议的将 lameduck 持续时间设置为 30 秒相一致,从而为节点的 iptables 规则更新提供充足的时间,在 pod 终止之前,使用 `/ready` 而不是 `/health` 作为 CoreDNS 就绪探针可确保 CoreDNS pod 在启动时完全准备就绪,能够及时响应 DNS 请求。
 ```yaml
 readinessProbe:
   httpGet:
@@ -74,18 +76,18 @@ readinessProbe:
 
 ## 日志和监控代理
 
-日志和监控代理可能会给您的集群控制平面带来显著的负载,因为这些代理需要查询 API 服务器来丰富日志和指标数据,添加工作负载元数据。节点上的代理只能访问本地节点资源,查看容器和进程名称等信息。查询 API 服务器可以添加更多详细信息,如 Kubernetes 部署名称和标签。这对于故障排除非常有帮助,但对于扩展来说可能是有害的。
+日志和监控代理可能会给您的集群控制平面带来显著的负载,因为这些代理需要查询 API 服务器来丰富日志和指标数据,添加工作负载元数据。节点上的代理只能访问本地节点资源,查看诸如容器和进程名称等信息。查询 API 服务器可以添加更多详细信息,如 Kubernetes 部署名称和标签。这对于故障排除非常有帮助,但对于扩展来说可能是有害的。
 
-由于日志和监控有许多不同的选择,我们无法为每个提供商展示示例。对于 [fluentbit](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes),我们建议启用 Use_Kubelet 从本地 kubelet 获取元数据,而不是从 Kubernetes API 服务器获取,并设置 `Kube_Meta_Cache_TTL` 为一个可以减少重复调用的数字(例如 60)。
+由于日志和监控有许多不同的选择,我们无法为每个提供商展示示例。对于 [fluentbit](https://docs.fluentbit.io/manual/pipeline/filters/kubernetes)，我们建议启用 Use_Kubelet 从本地 kubelet 获取元数据,而不是从 Kubernetes API 服务器获取,并设置 `Kube_Meta_Cache_TTL` 为一个可以减少重复调用的数字(例如 60)。
 
-监控和日志的扩展有两种一般选择:
+监控和日志的扩展有两个一般选择:
 
 * 禁用集成
 * 采样和过滤
 
 禁用集成通常不是一个选择,因为您会丢失日志元数据。这消除了 API 扩展问题,但在需要时不会有所需的元数据,会引入其他问题。
 
-采样和过滤可以减少收集的指标和日志数量。这将降低对 Kubernetes API 的请求数量,并减少收集的指标和日志的存储量。减少存储成本将降低整个系统的成本。
+采样和过滤减少了收集的指标和日志数量。这将降低对 Kubernetes API 的请求数量,并减少收集的指标和日志的存储量。减少存储成本将降低整个系统的成本。
 
 配置采样的能力取决于代理软件,可以在不同的摄取点实现。重要的是尽可能在代理附近添加采样,因为那里可能发生 API 服务器调用。请联系您的提供商了解更多关于采样支持的信息。
 
