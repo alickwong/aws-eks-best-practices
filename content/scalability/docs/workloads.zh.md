@@ -1,3 +1,5 @@
+!!! 注意
+    本页面的内容是基于英文版本使用 Claude 3 生成的。如有差异,以英文版本为准。
 
 # 工作负载
 
@@ -15,7 +17,7 @@ Kubernetes集群中的工作负载可以访问与Kubernetes API集成的功能(�
 
 [每个命名空间最多5,000个服务,每个集群最多10,000个服务](https://github.com/kubernetes/community/blob/master/sig-scalability/configs-and-limits/thresholds.md)。为了帮助组织工作负载和服务,提高性能,并避免命名空间范围内资源的级联影响,我们建议将每个命名空间的服务数量限制在500个以内。
 
-随着集群中服务总数的增加,kube-proxy创建的iptables规则数量也会增加。生成成千上万的iptables规则并通过这些规则路由数据包会对节点性能产生影响,并增加网络延迟。
+随着集群中服务总数的增加,kube-proxy创建的iptables规则数量也会增加。生成成千上万的iptables规则并通过这些规则路由数据包会对节点产生性能影响,并增加网络延迟。
 
 创建 Kubernetes 命名空间,以涵盖单个应用程序环境,只要每个命名空间中的服务数量不超过 500 个。这将使服务发现保持足够小,以避免服务发现限制,并可帮助您避免服务命名冲突。应用程序环境(例如 dev、test、prod)应使用单独的 EKS 集群,而不是命名空间。
 
@@ -32,9 +34,9 @@ Kubernetes集群中的工作负载可以访问与Kubernetes API集成的功能(�
 要使用多个负载均衡器提供的服务可用作单个端点,您需要使用 [Amazon CloudFront](https://aws.amazon.com/cloudfront/)、[AWS Global Accelerator](https://aws.amazon.com/global-accelerator/) 或 [Amazon Route 53](https://aws.amazon.com/route53/) 将所有负载均衡器公开为单个面向客户的端点。每个选项都有不同的优势,可以单独或结合使用,具体取决于您的需求。
 [简体中文]
 
-Route 53可以在一个通用名称下公开多个负载均衡器,并根据分配的权重将流量发送到每个负载均衡器。您可以在[文档](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-values-weighted.html#rrsets-values-weighted-weight)中了解更多关于DNS权重的信息,并可以在[AWS Load Balancer Controller文档](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.4/guide/integrations/external_dns/#usage)中了解如何使用[Kubernetes external DNS controller](https://github.com/kubernetes-sigs/external-dns)实现它们。
+Route 53可以在一个通用名称下公开多个负载均衡器,并根据分配的权重将流量发送到每个负载均衡器。您可以在[文档](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-values-weighted.html#rrsets-values-weighted-weight)中了解更多关于DNS权重的信息,并可以在[AWS Load Balancer Controller文档](https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.4/guide/integrations/external_dns/#usage)中了解如何使用[Kubernetes外部DNS控制器](https://github.com/kubernetes-sigs/external-dns)实现它们。
 
-Global Accelerator可以根据请求IP地址将工作负载路由到最近的区域。这对于部署到多个区域的工作负载可能很有用,但它不会改善单个区域内单个集群的路由。将Route 53与Global Accelerator结合使用还有其他好处,如健康检查和当AZ不可用时的自动故障转移。您可以在[这篇博客文章](https://aws.amazon.com/blogs/containers/operating-a-multi-regional-stateless-application-using-amazon-eks/)中看到使用Global Accelerator和Route 53的示例。
+Global Accelerator可以根据请求IP地址将工作负载路由到最近的区域。这对于部署到多个区域的工作负载可能很有用,但它不会改善对单个区域内单个集群的路由。将Route 53与Global Accelerator结合使用还有其他好处,如健康检查和当AZ不可用时的自动故障转移。您可以在[这篇博文](https://aws.amazon.com/blogs/containers/operating-a-multi-regional-stateless-application-using-amazon-eks/)中看到使用Global Accelerator和Route 53的示例。
 
 CloudFront可以与Route 53和Global Accelerator一起使用,也可以单独使用,以将流量路由到多个目的地。CloudFront会缓存来自源的资产,这可能会根据您提供的内容减少带宽需求。
 
@@ -46,9 +48,9 @@ CloudFront可以与Route 53和Global Accelerator一起使用,也可以单独使�
 
 ## 尽可能使用不可变和外部密钥
 
-kubelet会缓存节点上pod使用的密钥的当前密钥和值。kubelet会监视密钥的变化。随着集群规模的扩大,不断增加的监视数量会对API服务器性能产生负面影响。
+kubelet会缓存用于pod卷的当前密钥和值的Secrets。kubelet会监视Secrets以检测更改。随着集群的扩展,不断增加的监视数量可能会对API服务器性能产生负面影响。
 
-有两种策略可以减少对密钥的监视数量:
+减少对Secrets的监视数量有两种策略:
 
 * 对于不需要访问Kubernetes资源的应用程序,您可以通过设置`automountServiceAccountToken: false`来禁用自动挂载服务帐户密钥。
 * 如果您的应用程序的密钥是静态的且将来不会被修改,请将[密钥标记为不可变](https://kubernetes.io/docs/concepts/configuration/secret/#secret-immutable)。kubelet不会为不可变的密钥维护API监视。
@@ -72,13 +74,13 @@ kubectl get secrets -A | wc -l
 
 ## 限制部署历史记录
 
-创建、更新或删除 Pod 可能会很慢,因为旧对象仍在集群中被跟踪。您可以减少[部署](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#clean-up-policy)的`revisionHistoryLimit`,以清理较旧的 ReplicaSet,这将降低 Kubernetes 控制器管理器跟踪的总对象数量。部署的默认历史记录限制为 10。
+创建、更新或删除 Pod 可能会变慢,因为旧对象仍在集群中被跟踪。您可以减少[部署](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#clean-up-policy)的`revisionHistoryLimit`,以清理较旧的 ReplicaSet,这将降低 Kubernetes 控制器管理器跟踪的总对象数量。部署的默认历史记录限制为 10。
 
 如果您的集群通过 CronJob 或其他机制创建大量作业对象,您应该使用 [`ttlSecondsAfterFinished` 设置](https://kubernetes.io/docs/concepts/workloads/controllers/ttlafterfinished/)来自动清理集群中的旧 Pod。这将在指定的时间后从作业历史记录中删除成功执行的作业。
 
 ## 默认禁用 enableServiceLinks
 
-当 Pod 在节点上运行时,kubelet 会为每个活动服务添加一组环境变量。Linux 进程有一个最大的环境大小,如果您的命名空间中有太多服务,就可能达到这个限制。每个命名空间的服务数量不应超过 5,000。超过这个数量,服务环境变量的数量就会超过 shell 的限制,导致 Pod 在启动时崩溃。
+当 Pod 在节点上运行时,kubelet 会为每个活动服务添加一组环境变量。Linux 进程有一个最大的环境大小,如果您的命名空间中有太多服务,就可能达到这个限制。每个命名空间的服务数量不应超过 5,000。超过这个数量后,服务环境变量的数量会超过 shell 限制,导致 Pod 在启动时崩溃。
 
 还有其他原因不应该使用服务环境变量进行服务发现。环境变量名称冲突、泄露服务名称和总环境大小都是问题。您应该使用 CoreDNS 来发现服务端点。
 
@@ -86,7 +88,7 @@ kubectl get secrets -A | wc -l
 
 [动态准入 Webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/)包括准入 Webhook 和变更 Webhook。它们是 Kubernetes 控制平面之外的 API 端点,在资源发送到 Kubernetes API 时按顺序调用。每个 Webhook 的默认超时时间为 10 秒,如果您有多个 Webhook 或任何一个 Webhook 超时,都可能增加 API 请求的时间。
 
-确保您的 Webhook 高度可用,特别是在 AZ 故障期间,并正确设置 [failurePolicy](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#failure-policy)以拒绝资源或忽略故障。不要在不需要时调用 Webhook,允许 --dry-run kubectl 命令绕过 Webhook。
+确保您的 Webhook 高度可用,特别是在 AZ 事故期间,并正确设置 [failurePolicy](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#failure-policy)以拒绝资源或忽略失败。不要在不需要时调用 Webhook,允许 --dry-run kubectl 命令绕过 Webhook。
 ```
 apiVersion: admission.k8s.io/v1
 kind: AdmissionReview
@@ -96,4 +98,4 @@ request:
 
 可变 Webhooks 可以频繁地修改资源。如果您有 5 个可变 Webhooks 并部署 50 个资源，etcd 将存储每个资源的所有版本，直到压缩运行（每 5 分钟一次）以删除已修改资源的旧版本。在这种情况下，当 etcd 删除被取代的资源时，将从 etcd 中删除 200 个资源版本，并且根据资源的大小，可能会在 etcd 主机上占用大量空间，直到每 15 分钟运行一次碎片整理。
 
-这种碎片整理可能会导致 etcd 暂停，这可能会对 Kubernetes API 和控制器产生其他影响。您应该避免频繁修改大型资源或快速连续修改数百个资源。
+这种碎片整理可能会导致 etcd 暂停，从而可能会对 Kubernetes API 和控制器产生其他影响。您应该避免频繁修改大型资源或快速连续修改数百个资源。

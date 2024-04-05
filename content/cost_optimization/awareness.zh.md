@@ -1,3 +1,5 @@
+!!! 注意
+    本页面的内容是基于英文版本使用 Claude 3 生成的。如有差异,以英文版本为准。
 
 # 支出意识
 
@@ -6,7 +8,7 @@
 ## 建议
 ### 使用成本探索器
 
-[AWS 成本探索器](https://aws.amazon.com/aws-cost-management/aws-cost-explorer/)拥有易于使用的界面,可让您可视化、了解和管理您的 AWS 成本和使用情况随时间的变化。您可以使用成本探索器中可用的过滤器分析成本和使用数据,并按各个层级进行分析。
+[AWS 成本探索器](https://aws.amazon.com/aws-cost-management/aws-cost-explorer/)拥有易于使用的界面,可让您可视化、了解和管理您的 AWS 成本和使用情况随时间的变化。您可以使用成本探索器中提供的过滤器分析成本和使用数据,并查看不同层面的信息。
 
 #### EKS 控制平面和 EKS Fargate 成本
 
@@ -20,9 +22,9 @@
 
 #### 资源标记
 
-Amazon EKS 支持[添加 AWS 标签](https://docs.aws.amazon.com/eks/latest/userguide/eks-using-tags.html)到您的 Amazon EKS 集群。这使得轻松控制对 EKS API 的访问以管理您的集群。添加到 EKS 集群的标签特定于 AWS EKS 集群资源,它们不会传播到集群使用的其他 AWS 资源,如 EC2 实例或负载均衡器。目前,通过 AWS API、控制台和 SDK,可以为所有新的和现有的 EKS 集群支持集群标记。
+Amazon EKS 支持[添加 AWS 标签](https://docs.aws.amazon.com/eks/latest/userguide/eks-using-tags.html)到您的 Amazon EKS 集群。这使得通过 EKS API 管理集群变得更加容易。添加到 EKS 集群的标签特定于 AWS EKS 集群资源,不会传播到集群使用的其他 AWS 资源,如 EC2 实例或负载均衡器。目前,通过 AWS API、控制台和 SDK,可以为所有新的和现有的 EKS 集群支持集群标记。
 
-AWS Fargate 是一项提供按需、大小合适的容器计算能力的技术。在您的集群中调度 pod 之前,您必须定义至少一个 Fargate 配置文件,该配置文件指定哪些 pod 应在启动时使用 Fargate。
+AWS Fargate 是一项提供按需、大小合适的容器计算能力的技术。在您的集群中调度 pod 到 Fargate 之前,您必须定义至少一个 Fargate 配置文件,该配置文件指定哪些 pod 应在启动时使用 Fargate。
 
 添加和列出 EKS 集群的标签:
 ```
@@ -47,12 +49,12 @@ $ aws eks list-tags-for-resource --resource-arn arn:aws:eks:us-west-2:xxx:cluste
 
 AWS Trusted Advisor 提供了一套丰富的最佳实践检查和建议,涵盖五个类别:成本优化、安全性、容错性、性能和服务限制。
 
-对于成本优化,Trusted Advisor 可帮助您消除未使用和空闲的资源,并建议您做出预留容量的承诺。将有助于 Amazon EKS 的关键行动项目包括低利用率的 EC2 实例、未关联的弹性 IP 地址、空闲的负载均衡器、利用不足的 EBS 卷等。完整的检查列表可在 https://aws.amazon.com/premiumsupport/technology/trusted-advisor/best-practice-checklist/ 上找到。
+对于成本优化,Trusted Advisor 可帮助消除未使用和空闲的资源,并建议做出预留容量的承诺。将有助于 Amazon EKS 的关键行动项目包括低利用率的 EC2 实例、未关联的弹性 IP 地址、空闲的负载均衡器、利用不足的 EBS 卷等。完整的检查列表可在 https://aws.amazon.com/premiumsupport/technology/trusted-advisor/best-practice-checklist/ 上找到。
 
 Trusted Advisor 还为 EC2 实例和 Fargate 提供了节省计划和预留实例的建议,这允许您承诺一致的使用量以换取折扣费率。
 
 !!! 注意
-    Trusted Advisor 的建议是通用建议,而不是特定于 EKS 的。
+    Trusted Advisor 的建议是通用的,而不是特定于 EKS。
 
 ### 使用 Kubernetes 仪表板
 
@@ -60,13 +62,13 @@ Trusted Advisor 还为 EC2 实例和 Fargate 提供了节省计划和预留实�
 
 Kubernetes 仪表板是一个通用的基于 Web 的 Kubernetes 集群 UI,提供有关 Kubernetes 集群的信息,包括集群、节点和 pod 级别的资源使用情况。在 Amazon EKS 集群上部署 Kubernetes 仪表板的说明在 [Amazon EKS 文档](https://docs.aws.amazon.com/eks/latest/userguide/dashboard-tutorial.html) 中有描述。
 
-仪表板提供了每个节点和 pod 的资源使用情况细分,以及 pod、服务、部署和其他 Kubernetes 对象的详细元数据。这些综合信息为您的 Kubernetes 环境提供了可见性。
+仪表板提供了每个节点和 pod 的资源使用情况分解,以及 pod、服务、部署和其他 Kubernetes 对象的详细元数据。这些综合信息为您的 Kubernetes 环境提供了可见性。
 
 ![Kubernetes 仪表板](../images/kubernetes-dashboard.png)
 
 ***kubectl top 和 describe 命令***
 
-使用 kubectl top 和 kubectl describe 命令查看资源使用指标。kubectl top 将显示集群中 pod 或节点的当前 CPU 和内存使用情况,或特定 pod 或节点的使用情况。kubectl describe 命令将提供有关特定节点或 pod 的更详细信息。
+使用 `kubectl top` 和 `kubectl describe` 命令查看资源使用指标。`kubectl top` 将显示集群中 pod 或节点的当前 CPU 和内存使用情况,或特定 pod 或节点的使用情况。`kubectl describe` 命令将提供有关特定节点或 pod 的更详细信息。
 ```
 $ kubectl top pods
 $ kubectl top nodes
@@ -157,22 +159,22 @@ Kube成本仪表板 -
 
 ### 使用Kubernetes成本分配和容量规划分析工具
 
-[Kubernetes Opex Analytics](https://github.com/rchakode/kube-opex-analytics)是一个工具,可以帮助组织跟踪其Kubernetes集群消耗的资源,以防止过度支付。为此,它生成了7天、14天和12个月的使用报告,显示了每个项目随时间推移所消耗的资源金额。
+[Kubernetes Opex Analytics](https://github.com/rchakode/kube-opex-analytics)是一款帮助组织跟踪其Kubernetes集群所消耗的资源,以防止过度支付的工具。为此,它生成了短期(7天)、中期(14天)和长期(12个月)的使用报告,显示了每个项目随时间推移所消耗的资源金额。
 
 ![Kubernetes Opex Analytics](../images/kube-opex-analytics.png)
 
 
 ### Magalix Kubeadvisor
 
-[KubeAdvisor](https://www.magalix.com/kubeadvisor)持续扫描您的Kubernetes集群,并报告您如何修复问题、应用最佳实践和优化您的集群(提供CPU/内存等资源的成本效率建议)。
+[KubeAdvisor](https://www.magalix.com/kubeadvisor)持续扫描您的Kubernetes集群,并报告如何修复问题、应用最佳实践和优化您的集群(提供CPU/内存等资源的成本效率建议)。
 
-### Spot.io,以前称为Spotinst
+### Spot.io,之前称为Spotinst
 
-Spotinst Ocean是一项应用程序扩展服务。与Amazon Elastic Compute Cloud (Amazon EC2)Auto Scaling组类似,Spotinst Ocean旨在通过利用Spot实例与按需和预留实例的组合来优化性能和成本。通过自动化的Spot实例管理和各种实例大小的组合,Ocean集群自动缩放器根据pod资源需求进行扩展。Spotinst Ocean还包括一种预测算法,可以提前15分钟预测Spot实例中断,并在不同的Spot容量池中启动一个新节点。
+Spotinst Ocean是一项应用程序扩展服务。与Amazon Elastic Compute Cloud (Amazon EC2)Auto Scaling组类似,Spotinst Ocean旨在通过利用Spot实例与按需和预留实例的组合来优化性能和成本。通过自动化的Spot实例管理和各种实例大小的组合,Ocean集群自动缩放器根据pod资源需求进行扩缩。Spotinst Ocean还包括一种预测算法,可以提前15分钟预测Spot实例中断,并在不同的Spot容量池中启动一个新节点。
 
 这可以作为[AWS Quickstart](https://aws.amazon.com/quickstart/architecture/spotinst-ocean-eks/)由Spotinst, Inc.与AWS合作开发。
 
-EKS研讨会还有一个模块是[在Amazon EKS上优化工作节点管理](https://eksworkshop.com/beginner/190_ocean/)使用Spot.io的Ocean,其中包括成本分配、合理调整和扩展策略等部分。
+EKS研讨会还有一个模块介绍[在Amazon EKS上优化工作节点管理](https://eksworkshop.com/beginner/190_ocean/),其中包括成本分配、合理调整和扩缩策略等部分。
 
 ### Yotascale
 
@@ -183,7 +185,7 @@ Yotascale有助于准确分配Kubernetes成本。Yotascale Kubernetes成本分�
 
 ### Alcide Advisor
 
-Alcide是AWS合作伙伴网络(APN)高级技术合作伙伴。Alcide Advisor有助于确保您的Amazon EKS集群、节点和pod配置都经过调整,可以根据安全最佳实践和内部指南运行。Alcide Advisor是一种无代理的Kubernetes审核和合规服务,旨在确保无摩擦和安全的DevSecOps流程,通过在进入生产环境之前加强开发阶段来实现这一目标。
+Alcide是AWS合作伙伴网络(APN)高级技术合作伙伴。Alcide Advisor帮助确保您的Amazon EKS集群、节点和pod配置都经过调整,可以根据安全最佳实践和内部指南运行。Alcide Advisor是一种无代理的Kubernetes审核和合规服务,旨在确保无缝和安全的DevSecOps流程,通过在进入生产环境之前加强开发阶段来实现这一目标。
 
 更多详情请参见[这篇博文](https://aws.amazon.com/blogs/apn/driving-continuous-security-and-configuration-checks-for-amazon-eks-with-alcide-advisor/)。
 
@@ -212,7 +214,7 @@ kubectl apply -k deploy/
 
 ### Popeye - 一个 Kubernetes 集群卫生检查器
 
-[Popeye - 一个 Kubernetes 集群卫生检查器](https://github.com/derailed/popeye)是一个实用程序,它扫描实时 Kubernetes 集群并报告已部署资源和配置的潜在问题。它基于已部署的内容而不是存储在磁盘上的内容对集群进行卫生检查。通过扫描您的集群,它可以检测到配置错误,并帮助您确保已经实施了最佳实践。
+[Popeye - 一个 Kubernetes 集群卫生检查器](https://github.com/derailed/popeye)是一个实用程序,它扫描实时 Kubernetes 集群并报告已部署资源和配置的潜在问题。它基于已部署的内容而不是磁盘上的内容对集群进行卫生检查。通过扫描您的集群,它可以检测到配置错误,并帮助您确保已经实施了最佳实践。
 
 ### 资源
 请参考以下资源,了解有关成本优化最佳实践的更多信息。
