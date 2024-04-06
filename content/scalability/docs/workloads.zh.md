@@ -1,6 +1,6 @@
 
 !!! note
-    本页内容由基于英文版本的 Claude 3 生成。如有差异,以英文版本为准。
+    此页面的内容是使用大型语言模型(Claude 3)创建的,并基于英文版本。如有差异,以英文版本为准。
 
 # 工作负载
 
@@ -12,23 +12,23 @@ Kubernetes 集群中的工作负载可以访问与 Kubernetes API 集成的功�
 
 您无法将 VPC 从 IPv4 过渡到 IPv6,因此在配置集群之前启用 IPv6 很重要。如果您在 VPC 中启用了 IPv6,这并不意味着您必须使用它,如果您的 pod 和服务使用 IPv6,您仍然可以将流量路由到和从 IPv4 地址。请参阅[EKS 网络最佳实践](https://aws.github.io/aws-eks-best-practices/networking/index/)以了解更多信息。
 
-在[您的集群中使用 IPv6](https://docs.aws.amazon.com/eks/latest/userguide/cni-ipv6.html)可以避免一些最常见的集群和工作负载扩展限制。IPv6 可以避免 IP 地址耗尽,从而无法创建 pod 和节点。它还可以提高每个节点的性能,因为 pod 可以更快地获得 IP 地址,减少了每个节点的 ENI 附加数量。您也可以通过在 VPC CNI 中使用[IPv4 前缀模式](https://aws.github.io/aws-eks-best-practices/networking/prefix-mode/)来实现类似的节点性能,但您仍需确保 VPC 中有足够的 IP 地址可用。
+在[您的集群中使用 IPv6](https://docs.aws.amazon.com/eks/latest/userguide/cni-ipv6.html)可以避免一些最常见的集群和工作负载扩展限制。IPv6 可以避免 IP 地址耗尽,从而无法创建 pod 和节点。它还具有每个节点的性能改进,因为 pod 可以更快地获得 IP 地址,减少了每个节点的 ENI 附加数量。您可以通过在 VPC CNI 中使用[IPv4 前缀模式](https://aws.github.io/aws-eks-best-practices/networking/prefix-mode/)来实现类似的节点性能,但您仍然需要确保 VPC 中有足够的 IP 地址可用。
 
 ## 限制每个命名空间的服务数量
 
-[每个命名空间最多 5,000 个服务,每个集群最多 10,000 个服务](https://github.com/kubernetes/community/blob/master/sig-scalability/configs-and-limits/thresholds.md)。为了帮助组织工作负载和服务,提高性能,并避免命名空间范围内资源的级联影响,我们建议将每个命名空间的服务数量限制在 500 个以内。
+[每个命名空间最多 5,000 个服务,集群最多 10,000 个服务](https://github.com/kubernetes/community/blob/master/sig-scalability/configs-and-limits/thresholds.md)。为了帮助组织工作负载和服务,提高性能,并避免命名空间范围内资源的级联影响,我们建议将每个命名空间的服务数量限制在 500 个以内。
 
-随着集群中服务总数的增加,由 kube-proxy 创建的 IP 表规则数量也会增加。生成成千上万的 IP 表规则并通过这些规则路由数据包会对节点性能产生影响,并增加网络延迟。
+随着集群中服务总数的增加,由 kube-proxy 创建的 IP 表规则数量也会增加。生成成千上万的 IP 表规则并通过这些规则路由数据包会对节点产生性能影响,并增加网络延迟。
 
 创建 Kubernetes 命名空间,以涵盖单个应用程序环境,只要每个命名空间中的服务数量不超过 500 个。这将使服务发现保持足够小,以避免服务发现限制,并且还可以帮助您避免服务命名冲突。应用程序环境(例如 dev、test、prod)应该使用单独的 EKS 集群,而不是命名空间。
 
 ## 了解 Elastic Load Balancer 配额
 
-在创建您的服务时,请考虑您将使用哪种类型的负载均衡(例如 Network Load Balancer (NLB) 或 Application Load Balancer (ALB))。每种负载均衡器类型提供不同的功能,并且有[不同的配额](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html)。可以调整一些默认配额,但有一些配额上限是无法更改的。要查看您的帐户配额和使用情况,请在 AWS 控制台中查看[服务配额仪表板](http://console.aws.amazon.com/servicequotas)。
+在创建您的服务时,请考虑您将使用哪种类型的负载均衡(例如 Network Load Balancer (NLB) 或 Application Load Balancer (ALB))。每种负载均衡器类型提供不同的功能,并且有[不同的配额](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html)。可以调整一些默认配额,但有一些配额最大值是无法更改的。要查看您的帐户配额和使用情况,请在 AWS 控制台中查看[服务配额仪表板](http://console.aws.amazon.com/servicequotas)。
 
-例如,默认的 ALB 目标是 1000。如果您有一个服务有超过 1000 个端点,您将需要增加配额或将服务拆分到多个 ALB 上,或使用 Kubernetes Ingress。默认的 NLB 目标是 3000,但限制为每个可用区 500 个目标。如果您的集群为 NLB 服务运行超过 500 个 pod,您将需要使用多个可用区或请求提高配额限制。
+例如,默认 ALB 目标是 1000。如果您有一个服务有超过 1000 个端点,您将需要增加配额或将服务拆分到多个 ALB 上,或使用 Kubernetes Ingress。默认 NLB 目标是 3000,但限制为每个可用区 500 个目标。如果您的集群为 NLB 服务运行超过 500 个 pod,您将需要使用多个可用区或请求提高配额限制。
 
-使用与服务耦合的负载均衡器的替代方案是使用[入口控制器](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/)。AWS Load Balancer 控制器可以为入口资源创建 ALB,但您可能考虑在集群中运行专用的控制器。集群内入口控制器允许您通过在集群内运行反向代理来公开多个 Kubernetes 服务。控制器具有不同的功能,例如对[Gateway API](https://gateway-api.sigs.k8s.io/)的支持,这可能会根据您的工作负载数量和大小而有所不同。
+使用与服务耦合的负载均衡器的替代方法是使用[入口控制器](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/)。AWS Load Balancer 控制器可以为入口资源创建 ALB,但您可能考虑在集群中运行专用控制器。集群内入口控制器允许您通过在集群内运行反向代理来公开多个 Kubernetes 服务。控制器具有不同的功能,例如对[Gateway API](https://gateway-api.sigs.k8s.io/)的支持,这可能会根据您的工作负载数量和大小而有所不同。
 
 ## 使用 Route 53、Global Accelerator 或 CloudFront
 
@@ -66,7 +66,7 @@ automountServiceAccountToken: true
 ```
 
 
-在集群中的密钥数量超过10,000的限制之前进行监控。您可以使用以下命令查看集群中密钥的总数。您应该通过集群监控工具来监控此限制。
+在集群中的密钥数量超过10,000的限制之前进行监控。您可以使用以下命令查看集群中的密钥总数。您应该通过集群监控工具来监控此限制。
 ```
 kubectl get secrets -A | wc -l
 ```
@@ -84,13 +84,13 @@ kubectl get secrets -A | wc -l
 
 当 Pod 在节点上运行时,kubelet 会为每个活动服务添加一组环境变量。Linux 进程有一个最大的环境大小,如果您的命名空间中有太多服务,就可能达到这个限制。每个命名空间的服务数量不应超过 5,000。超过这个数量后,服务环境变量的数量会超过 shell 限制,导致 Pod 在启动时崩溃。
 
-还有其他原因不应该使用服务环境变量进行服务发现。环境变量名称冲突、泄露服务名称和总环境大小都是问题。您应该使用 CoreDNS 来发现服务端点。
+还有其他原因不应该使用服务环境变量进行服务发现。环境变量名称冲突、泄露服务名称和总环境大小都是一些问题。您应该使用 CoreDNS 来发现服务端点。
 
 ## 限制每个资源的动态准入 Webhook
 
 [动态准入 Webhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/) 包括准入 Webhook 和变更 Webhook。它们是 Kubernetes 控制平面之外的 API 端点,在资源发送到 Kubernetes API 时按顺序调用。每个 Webhook 的默认超时时间为 10 秒,如果您有多个 Webhook 或任何一个 Webhook 超时,都可能增加 API 请求的时间。
 
-确保您的 Webhook 高度可用,特别是在 AZ 事故期间,并且 [failurePolicy](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#failure-policy) 设置正确,以拒绝资源或忽略失败。不要在不需要时调用 Webhook,允许 --dry-run kubectl 命令绕过 Webhook。
+确保您的 Webhook 高度可用,特别是在 AZ 故障期间,并且 [failurePolicy](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#failure-policy) 设置正确,以拒绝资源或忽略故障。不要在不需要时调用 Webhook,允许 --dry-run kubectl 命令绕过 Webhook。
 ```
 apiVersion: admission.k8s.io/v1
 kind: AdmissionReview
@@ -98,6 +98,6 @@ request:
   dryRun: False
 ```
 
-可变 Webhooks 可以连续修改资源。如果您有 5 个可变 Webhooks 并部署 50 个资源，etcd 将存储每个资源的所有版本，直到压缩运行（每 5 分钟一次）以删除已修改资源的旧版本。在这种情况下，当 etcd 删除被取代的资源时，将从 etcd 中删除 200 个资源版本，并且根据资源的大小，可能会在 15 分钟运行一次的碎片整理之前在 etcd 主机上占用大量空间。
+可变 Webhooks 可以连续修改资源。如果您有 5 个可变 Webhooks 并部署 50 个资源，etcd 将存储每个资源的所有版本，直到压缩运行（每 5 分钟一次）以删除已修改资源的旧版本。在这种情况下，当 etcd 删除被取代的资源时，将从 etcd 中删除 200 个资源版本，并且根据资源的大小，可能会在 15 分钟后运行碎片整理之前在 etcd 主机上占用大量空间。
 
 这种碎片整理可能会导致 etcd 暂停，这可能会对 Kubernetes API 和控制器产生其他影响。您应该避免频繁修改大型资源或快速连续修改数百个资源。

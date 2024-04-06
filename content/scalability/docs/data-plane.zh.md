@@ -1,5 +1,6 @@
-!!! 注意
-    本页面的内容是基于英文版本使用 Claude 3 生成的。如有差异,以英文版本为准。
+
+!!! note
+    此页面的内容是使用大型语言模型(Claude 3)创建的,并基于英文版本。如有差异,以英文版本为准。
 
 # Kubernetes 数据平面
 
@@ -13,15 +14,15 @@ Kubernetes 数据平面包括 EC2 实例、负载均衡器、存储和 Kubernete
 
 托管节点组将为您提供 Amazon EC2 Auto Scaling 组的灵活性,并增加托管升级和配置的好处。它可以使用 [Kubernetes 集群自动缩放器](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler)进行缩放,是具有各种计算需求的集群的常见选择。
 
-Karpenter 是由 AWS 创建的开源、工作负载原生节点自动缩放器。它根据资源需求(如 GPU)和污点和容忍度(如区域分散)来缩放集群中的节点,而无需管理节点组。节点直接从 EC2 创建,避免了默认节点组配额(每组 450 个节点)的限制,并提供更大的实例选择灵活性和更少的操作开销。我们建议客户尽可能使用 Karpenter。
+Karpenter 是 AWS 创建的开源、工作负载原生节点自动缩放器。它根据资源需求(如 GPU)和污点和容忍度(如区域分散)来缩放集群中的节点,而无需管理节点组。节点直接从 EC2 创建,避免了默认节点组配额(每组 450 个节点)的限制,并提供更大的实例选择灵活性和更少的操作开销。我们建议客户尽可能使用 Karpenter。
 
 ## 使用多种不同的 EC2 实例类型
 
-每个 AWS 区域都有有限数量的可用实例类型。如果您创建一个只使用一种实例类型的集群,并将节点数量扩展到超出该区域容量,您将收到没有可用实例的错误。为了避免这个问题,您不应该任意限制可以在集群中使用的实例类型。
+每个 AWS 区域都有有限数量的可用实例类型。如果您创建一个只使用一种实例类型的集群,并将节点数量扩展到超出该区域容量的程度,您将收到没有可用实例的错误。为了避免这个问题,您不应该任意限制可以在集群中使用的实例类型。
 
-Karpenter 默认将使用一组广泛的兼容实例类型,并将根据待处理工作负载的要求、可用性和成本在配置时选择实例。您可以通过 `karpenter.k8s.aws/instance-category` 键在 [NodePools](https://karpenter.sh/docs/concepts/nodepools/#instance-types) 中扩展使用的实例类型列表。
+Karpenter 默认将使用一组广泛的兼容实例类型,并将根据待处理工作负载的需求、可用性和成本在配置时选择实例。您可以通过 `karpenter.k8s.aws/instance-category` 键在 [NodePools](https://karpenter.sh/docs/concepts/nodepools/#instance-types) 中扩展使用的实例类型列表。
 
-Kubernetes 集群自动缩放器要求节点组具有类似的大小,以便能够一致地进行缩放。您应该根据 CPU 和内存大小创建多个组,并独立地对它们进行缩放。使用 [ec2-instance-selector](https://github.com/aws/amazon-ec2-instance-selector) 来识别适合您节点组的类似大小的实例。
+Kubernetes 集群自动缩放器要求节点组的大小相似,以便能够一致地进行缩放。您应该根据 CPU 和内存大小创建多个组,并独立地对它们进行缩放。使用 [ec2-instance-selector](https://github.com/aws/amazon-ec2-instance-selector) 来识别适合您节点组的类似大小的实例。
 ```
 ec2-instance-selector --service eks --vcpus-min 8 --memory-min 16
 a1.2xlarge
@@ -41,15 +42,15 @@ c5.metal
 
 ## 选择较大的节点以减轻 API 服务器负载
 
-在决定使用哪种实例类型时,较少的大型节点将对 Kubernetes 控制平面施加较小的负载,因为将运行较少的 kubelet 和 DaemonSet。但是,大型节点可能无法像较小的节点那样得到充分利用。应根据您的工作负载可用性和扩展需求来评估节点大小。
+在决定使用哪种实例类型时,较少的大型节点将对 Kubernetes 控制平面施加较小的负载,因为将运行较少的 kubelet 和 DaemonSets。但是,大型节点可能无法像较小的节点那样得到充分利用。应根据您的工作负载可用性和扩展需求来评估节点大小。
 
-一个由三个 u-24tb1.metal 实例(24 TB 内存和 448 个内核)组成的集群有 3 个 kubelet,默认情况下每个节点最多可以有 110 个 pod。如果您的 pod 每个使用 4 个内核,那么这可能是预期的(4 个内核 x 110 = 440 个内核/节点)。在一个 3 节点集群中,您处理实例事故的能力将较低,因为 1 个实例故障可能会影响集群的 1/3。您应该在工作负载中指定节点要求和 pod 分布,以便 Kubernetes 调度程序可以正确地放置工作负载。
+一个由三个 u-24tb1.metal 实例(24 TB 内存和 448 个内核)组成的集群有 3 个 kubelet,默认情况下每个节点最多可以有 110 个 pod。如果您的 pod 每个使用 4 个内核,那么这可能是预期的(4 个内核 x 110 = 440 个内核/节点)。在一个由 3 个节点组成的集群中,处理实例事故的能力会很低,因为 1 个实例故障可能会影响集群的 1/3。您应该在工作负载中指定节点要求和 pod 分散,以便 Kubernetes 调度程序可以正确地放置工作负载。
 
-工作负载应该定义它们所需的资源和所需的可用性,通过污点、容忍和 [PodTopologySpread](https://kubernetes.io/blog/2020/05/introducing-podtopologyspread/) 来实现。它们应该优先选择可以完全利用并满足可用性目标的最大节点,以减少控制平面负载、降低运营成本和降低成本。
+工作负载应该定义它们所需的资源和所需的可用性,通过污点、容忍和 [PodTopologySpread](https://kubernetes.io/blog/2020/05/introducing-podtopologyspread/) 来实现。它们应该优先选择可以充分利用并满足可用性目标的最大节点,以减轻控制平面负载、降低运营成本和降低成本。
 
-Kubernetes 调度程序将自动尝试在可用资源的情况下将工作负载分散到可用性区域和主机上。如果没有可用容量,Kubernetes 集群自动缩放器将尝试在每个可用性区域均匀地添加节点。Karpenter 将尝试尽快且尽可能便宜地添加节点,除非工作负载指定了其他要求。
+Kubernetes 调度程序将自动尝试在可用性区域和主机之间分散工作负载,如果有可用资源的话。如果没有可用容量,Kubernetes 集群自动缩放器将尝试在每个可用性区域均匀地添加节点。Karpenter 将尝试尽快且尽可能便宜地添加节点,除非工作负载指定了其他要求。
 
-要强制工作负载使用调度程序进行分散,并在可用性区域内创建新节点,您应该使用 topologySpreadConstraints:
+要强制工作负载通过调度程序进行分散,并在可用性区域内创建新节点,您应该使用 topologySpreadConstraints:
 ```
 spec:
   topologySpreadConstraints:
@@ -67,9 +68,10 @@ spec:
           dev: my-deployment
 ```
 
-## 使用相似的节点大小以保持一致的工作负载性能
 
-工作负载应该定义它们需要在什么大小的节点上运行,以实现一致的性能和可预测的扩展。一个请求 500m CPU 的工作负载在 4 核实例和 16 核实例上的表现会有所不同。避免使用可突发 CPU 的实例类型,如 T 系列实例。
+## 使用相似的节点大小以获得一致的工作负载性能
+
+工作负载应该定义它们需要在哪种大小的节点上运行,以确保一致的性能和可预测的扩展性。请求 500m CPU 的工作负载在 4 核实例和 16 核实例上的性能会有所不同。请避免使用可突发 CPU 的实例类型,如 T 系列实例。
 
 为确保您的工作负载获得一致的性能,工作负载可以使用 [支持的 Karpenter 标签](https://karpenter.sh/docs/concepts/scheduling/#labels) 来定位特定的实例大小。
 ```
@@ -83,7 +85,7 @@ spec:
       karpenter.k8s.aws/instance-size: 8xlarge
 ```
 
-在使用 Kubernetes 集群自动扩缩器调度工作负载的集群中，工作负载应该根据标签匹配与节点组的节点选择器相匹配。
+在使用 Kubernetes Cluster Autoscaler 调度工作负载的集群中，应根据标签匹配将节点选择器与节点组相匹配。
 ```
 spec:
   affinity:
@@ -102,7 +104,7 @@ spec:
 
 计算资源包括 EC2 实例和可用区。有效利用计算资源将提高您的可扩展性、可用性、性能,并降低总成本。在具有多个应用程序的自动扩展环境中,高效利用资源极其困难。[Karpenter](https://karpenter.sh/) 被创建用于根据工作负载需求按需配置实例,以最大化利用率和灵活性。
 
-Karpenter 允许工作负载声明所需的计算资源类型,而无需先创建节点组或为特定节点配置标签污点。请参阅 [Karpenter 最佳实践](https://aws.github.io/aws-eks-best-practices/karpenter/) 以了解更多信息。考虑在 Karpenter 配置程序中启用[合并](https://aws.github.io/aws-eks-best-practices/karpenter/#configure-requestslimits-for-all-non-cpu-resources-when-using-consolidation),以替换利用率较低的节点。
+Karpenter 允许工作负载声明所需的计算资源类型,而无需先创建节点组或为特定节点配置标签污点。请参阅 [Karpenter 最佳实践](https://aws.github.io/aws-eks-best-practices/karpenter/) 以了解更多信息。考虑在 Karpenter 配置程序中启用[合并](https://aws.github.io/aws-eks-best-practices/karpenter/#configure-requestslimits-for-all-non-cpu-resources-when-using-consolidation)以替换利用率较低的节点。
 
 ## 自动化 Amazon 机器镜像 (AMI) 更新
 
@@ -122,9 +124,9 @@ aws ssm get-parameter \
 
 使用多个 EBS 卷进行容器部署
 
-EBS 卷的输入/输出 (I/O) 配额取决于卷类型(如 gp3)和磁盘大小。如果您的应用程序共享主机的单个 EBS 根卷,这可能会耗尽整个主机的磁盘配额,导致其他应用程序等待可用容量。应用程序会在写入文件到其覆盖分区、从主机挂载本地卷以及根据所使用的日志代理将日志写入标准输出 (STDOUT) 时写入磁盘。
+EBS 卷的输入/输出 (I/O) 配额取决于卷类型(如 gp3)和磁盘大小。如果您的应用程序共享单个 EBS 根卷与主机,这可能会耗尽整个主机的磁盘配额,导致其他应用程序等待可用容量。应用程序会在写入文件到其覆盖分区、从主机挂载本地卷以及根据所使用的日志代理将日志写入标准输出 (STDOUT) 时写入磁盘。
 
-为了避免磁盘 I/O 耗尽,您应该将第二个卷挂载到容器状态文件夹(例如 /run/containerd)、为工作负载存储使用单独的 EBS 卷,并禁用不必要的本地日志记录。
+为了避免磁盘 I/O 耗尽,您应该将第二个卷挂载到容器状态文件夹(如 /run/containerd)、为工作负载存储使用单独的 EBS 卷,并禁用不必要的本地日志记录。
 
 要使用 [eksctl](https://eksctl.io/) 在您的 EC2 实例上挂载第二个卷,您可以使用具有以下配置的节点组:
 ```
@@ -186,27 +188,27 @@ spec:
       claimName: ebs-claim
 ```
 
-避免使用低 EBS 附加限制的实例，如果工作负载使用 EBS 卷
+如果工作负载使用 EBS 卷，请避免使用 EBS 附加限制较低的实例
 
-EBS 是工作负载拥有持久性存储的最简单方式之一，但它也存在可扩展性限制。每种实例类型都有最大的 [可附加 EBS 卷数量](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/volume_limits.html)。工作负载需要声明它们应该在哪些实例类型上运行，并使用 Kubernetes 污点限制单个实例上的副本数量。
+EBS 是工作负载拥有持久性存储的最简单方式之一，但也存在可扩展性限制。每种实例类型都有最大的 [EBS 卷可附加数量](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/volume_limits.html)。工作负载需要声明它们应该在哪些实例类型上运行，并使用 Kubernetes 污点限制单个实例上的副本数量。
 
 禁用不必要的磁盘日志记录
 
-避免通过不在生产环境中以调试日志记录运行应用程序并禁用频繁读写磁盘的日志记录来避免不必要的本地日志记录。Journald 是本地日志记录服务,它在内存中保持日志缓冲区,并定期刷新到磁盘。Journald 优于立即将每一行记录到磁盘的 syslog。禁用 syslog 还可以降低所需的总存储量,并避免需要复杂的日志轮换规则。要禁用 syslog,可以将以下代码段添加到您的 cloud-init 配置中:
+避免通过不在生产环境中以调试日志记录运行应用程序以及禁用频繁读写磁盘的日志记录来避免不必要的本地日志记录。Journald 是本地日志记录服务，它将日志缓冲区保存在内存中，并定期刷新到磁盘。Journald 优于立即将每一行记录到磁盘的 syslog。禁用 syslog 还可以降低所需的总存储量，并避免需要复杂的日志轮换规则。要禁用 syslog，可以将以下代码段添加到您的 cloud-init 配置中:
 ```
 runcmd:
   - [ systemctl, disable, --now, syslog.service ]
 ```
 
 
-## 在操作系统更新速度是必要时就地修补实例
+## 在操作系统更新速度是必要条件时就地修补实例
 
 !!! 注意
     只有在必要时才应该就地修补实例。Amazon 建议将基础设施视为不可变的,并以与应用程序相同的方式彻底测试通过较低环境推广的更新。本节适用于无法做到这一点的情况。
 
 在不中断容器化工作负载的情况下,在现有 Linux 主机上安装软件包只需几秒钟。可以安装并验证该软件包,而无需隔离、排空或替换实例。
 
-要替换实例,首先需要创建、验证和分发新的 AMI。需要为实例创建替换,并隔离和排空旧实例。然后需要在新实例上创建工作负载,进行验证,并对所有需要修补的实例重复此过程。在不中断工作负载的情况下安全地替换实例需要数小时、数天或数周的时间。
+要替换实例,首先需要创建、验证和分发新的 AMI。需要为实例创建替换,并隔离和排空旧实例。然后需要在新实例上创建工作负载,进行验证,并对所有需要修补的实例重复此过程。安全地替换实例而不中断工作负载需要数小时、数天或数周的时间。
 
 Amazon 建议使用由自动化、声明式系统构建、测试和推广的不可变基础设施,但如果您需要快速修补系统,则需要就地修补系统并在新 AMI 可用时替换它们。由于修补和替换系统之间存在巨大的时间差异,我们建议使用 [AWS Systems Manager Patch Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-patch.html) 来自动修补节点。
 
