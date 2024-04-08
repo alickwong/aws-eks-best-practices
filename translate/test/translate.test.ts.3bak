@@ -1,0 +1,312 @@
+import {
+  BedrockRuntimeClient,
+  InvokeModelCommand,
+  InvokeModelCommandInput, InvokeModelWithResponseStreamCommand,
+  InvokeModelWithResponseStreamCommandInput
+} from "@aws-sdk/client-bedrock-runtime";
+import * as fs from 'fs';
+import * as path from 'path';
+import * as retry from 'async-retry';
+
+let lang = 'zh'
+const bedrock = new BedrockRuntimeClient();
+
+jest.setTimeout(1000000000);
+
+function getNote(): string {
+  return "!!! note\n" +
+    "    This page's content was created using the Large Language Model (Claude 3) and is based on the English version." +
+    "    In case of discrepancy, the English version shall prevail. " +
+    "\n";
+}
+
+function getPrompt(chunk: string) {
+  // If add two \n in this code `${chunk}\nAssistant:`, all result will have one more line
+  const prompt = `\n\nHuman: 
+    Translate the following the text in a markdown file to simplified Chinese, Follow these requirements:
+    - For any technical terms or proper nouns, please keep them in the original English. This includes but is not limited to names of technologies, protocols, software, APIs, and technical concepts.
+    - if the line consist ![any text] it means images, do not translate
+    - Always reply like this: "Your translation is:\n[translation text]"
+    - Do not try to change/ fix the markdown symbol.
+    - Only return the translated text.
+    - Ensuring a formal tone and using industry-specific terms
+    - Do not add extra information, such as extra titles, only need to translate
+    - If the text only have a image markdown tag, ONLY translate the text inside \[\] symbol, do not add extra titles
+    - Do not translate the text inside \`\` symbol
+    Here is the text need to be translated:\n${chunk}\nAssistant:`;
+
+  return prompt;
+}
+
+async function bedrockStreamingApi(chunk: string) {
+  let prompt = getPrompt(chunk)
+  let payload = {
+    "anthropic_version": "bedrock-2023-05-31",
+    "max_tokens": 3000,
+    "temperature": 0,
+    "top_k": 1,
+    "messages": [
+      {
+        "role": "user",
+        "content": [{"type": "text", "text": prompt}]
+      }
+    ],
+    // "sessionState": sessionState
+  };
+  const params: InvokeModelWithResponseStreamCommandInput = {
+    modelId: "anthropic.claude-3-haiku-20240307-v1:0",
+    body: JSON.stringify(payload),
+    contentType: "application/json"
+  };
+  const command = new InvokeModelWithResponseStreamCommand(params);
+  const res = await bedrock.send(command);
+  const chunks = [];
+
+  if (res) {
+    for await (const event of res?.body ?? []) {
+      if (event.chunk && event.chunk.bytes) {
+        const chunk = JSON.parse(Buffer.from(event.chunk.bytes).toString("utf-8"));
+        chunks.push(chunk.completion); // change this line
+      } else if (
+        event.internalServerException ||
+        event.modelStreamErrorException ||
+        event.throttlingException ||
+        event.validationException
+      ) {
+        console.error(event);
+        break;
+      }
+    }
+    console.log({
+      prompt: prompt,
+      completion: chunks.join(''),
+    });
+
+    return chunks.join('');
+  }
+
+  return;
+}
+
+async function bedrockApi(chunk: string): Promise<string | undefined> {
+
+  let prompt = getPrompt(chunk);
+
+  let payload = {
+    "anthropic_version": "bedrock-2023-05-31",
+    "max_tokens": 3000,
+    "temperature": 0,
+    "top_k": 1,
+    "messages": [
+      {
+        "role": "user",
+        "content": [{"type": "text", "text": prompt}]
+      }
+    ],
+    // "sessionState": sessionState
+  };
+  const params: InvokeModelCommandInput = {
+    // modelId: "anthropic.claude-3-sonnet-20240229-v1:0",
+    modelId: "anthropic.claude-3-haiku-20240307-v1:0",
+    body: JSON.stringify(payload),
+    contentType: "application/json"
+  };
+
+  const command = new InvokeModelCommand(params);
+  const data = await retry(
+    async () => {
+      const response = await bedrock.send(command);
+      if (!response.body) {
+        console.log(`throw error`);
+        throw new Error('Empty response body');
+      }
+      return response;
+    },
+    {
+      retries: 10,
+      onRetry: (error, attempt) => {
+        console.log(`Retry attempt ${attempt} due to error:`, error);
+      }
+    }
+  );
+
+  if (data && data.body) {
+    let string = new TextDecoder().decode(data.body);
+    let translatedData = JSON.parse(string);
+    let translatedChunk = translatedData.content[0].text;
+    // remove first line
+    translatedChunk = translatedChunk.replace(/^.*\n/, '');
+    console.log(`string ${string}`);
+    return translatedChunk;
+  }
+  return;
+}
+
+async function translateFile(filePath: string, outputDir: string): Promise<void> {
+  console.log(`start translating ${filePath}`);
+  const englishText = fs.readFileSync(filePath, 'utf-8');
+
+  // Split the text into chunks
+  const chunkSize = 3000; // Adjust the chunk size as needed
+  const chunks = splitTextWithCodeBlocks(englishText, chunkSize);
+  // Add a warning note about the translation
+  chunks.unshift(getNote());
+  console.log('chunks', chunks.join("\n==========================\n"));
+
+  let translatedText = '';
+  let chunkNo = 0;
+  let sessionState = {};
+
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    console.log(`chunk: ${chunkNo}/${chunks.length}`);
+    if (chunk.startsWith('```')) {
+      translatedText += chunk + "\n";
+      console.log(`by pass code block`);
+      chunkNo++;
+      continue;
+    }
+
+    let bedrockResult = await bedrockApi(chunk);
+    translatedText += bedrockResult + "\n";
+    chunkNo++;
+  }
+
+  let nameArr = path.basename(filePath).split('.');
+  const outputPath = path.join(path.dirname(filePath), nameArr[0] + '.' + lang + '.' + nameArr[1]);
+  fs.writeFileSync(outputPath, translatedText);
+  console.log(`Translated ${filePath} to ${outputPath}`);
+}
+
+async function simplifiedTranslateFile(filePath: string) {
+  console.log(`start translating ${filePath}`);
+  const englishText = fs.readFileSync(filePath, 'utf-8');
+  let translatedText = await bedrockStreamingApi(englishText);
+
+  let nameArr = path.basename(filePath).split('.');
+  const outputPath = path.join(path.dirname(filePath), nameArr[0] + '.' + lang + '.' + nameArr[1]);
+  fs.writeFileSync(outputPath, translatedText);
+  console.log(`Translated ${filePath} to ${outputPath}`);
+}
+
+function splitTextWithCodeBlocks(text: string, chunkSize: number): string[] {
+  const chunks: string[] = [];
+  const lines = text.split('\n');
+
+  let currentChunk = '';
+  let insideCodeBlock = false;
+
+  for (const line of lines) {
+    if (line.startsWith('```')) {
+      if (insideCodeBlock) {
+        // End of code block
+        currentChunk += line + '\n';
+        chunks.push(currentChunk);
+        currentChunk = '';
+        insideCodeBlock = false;
+      } else {
+        // Start of code block
+        if (currentChunk) {
+          chunks.push(currentChunk);
+        }
+        currentChunk = line + '\n';
+        insideCodeBlock = true;
+      }
+    } else {
+      if (insideCodeBlock) {
+        // Inside a code block, append the line
+        currentChunk += line + '\n';
+      } else {
+        // Outside a code block, check chunk size
+        if (currentChunk.length + line.length + 1 <= chunkSize) {
+          currentChunk += (currentChunk ? '\n' : '') + line;
+        } else {
+          chunks.push(currentChunk);
+          currentChunk = line;
+        }
+      }
+    }
+  }
+
+  if (currentChunk) {
+    chunks.push(currentChunk);
+  }
+
+  return chunks;
+}
+
+
+async function getFiles(dirPath: string): Promise<string[]> {
+  let files: string[] = [];
+
+  const items = await fs.promises.readdir(dirPath);
+
+  for (const item of items) {
+    const itemPath = path.join(dirPath, item);
+    const stat = await fs.promises.stat(itemPath);
+
+    if (stat.isDirectory()) {
+      const subDirFiles = await getFiles(itemPath);
+      files = files.concat(subDirFiles);
+    } else {
+      files.push(itemPath);
+    }
+  }
+
+  return files;
+}
+
+async function translateDirectory(inputDir: string, outputDir: string): Promise<void> {
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, {recursive: true});
+  }
+
+  const files = await getFiles(inputDir);
+  console.log('testtt', inputDir, files);
+
+  for (const file of files) {
+    const fileName = path.basename(file);
+    const extension = path.extname(fileName);
+    const dotCount = fileName.split('.').length - 1;
+
+    if (extension === '.md' && dotCount === 1) {
+      await simplifiedTranslateFile(file);
+    }
+  }
+}
+
+test('Directory Translate Files', async () => {
+  const inputDir = '../content/scalability';
+  const outputDir = '../content/scalability';
+  // const inputDir = '../content/karpenter';
+  await translateDirectory(inputDir, outputDir);  // const outputDir = '../content/scalability
+});
+
+test('Single File Translate Files', async () => {
+  // Single File Translate
+  const inputDir = '../content/scalability/docs/quotas.md';
+  const outputDir = '../content/scalability/docs';
+  await translateFile(inputDir, outputDir);
+});
+
+test('Direct Call Bedrock', async () => {
+  let result = await bedrockApi('![Defrag query](../images/defrag.png)');
+  console.log(result);
+});
+
+test('Direct Call Bedrock - Tech Terms', async () => {
+  let result = await bedrockApi('Limit dynamic admission webhooks per resource¶\n' +
+    'Dynamic Admission Webhooks include admission webhooks and mutating webhooks. They are API endpoints not part of the Kubernetes Control Plane that are called in sequence when a resource is sent to the Kubernetes API. Each webhook has a default timeout of 10 seconds and can increase the amount of time an API request takes if you have multiple webhooks or any of them timeout.\n' +
+    '\n' +
+    'Make sure your webhooks are highly available—especially during an AZ incident—and the failurePolicy is set properly to reject the resource or ignore the failure. Do not call webhooks when not needed by allowing --dry-run kubectl commands to bypass the webhook.');
+  console.log(result);
+});
+
+test('Streaming API Test', async () => {
+  let result = await bedrockStreamingApi('Limit dynamic admission webhooks per resource¶\n' +
+    'Dynamic Admission Webhooks include admission webhooks and mutating webhooks. They are API endpoints not part of the Kubernetes Control Plane that are called in sequence when a resource is sent to the Kubernetes API. Each webhook has a default timeout of 10 seconds and can increase the amount of time an API request takes if you have multiple webhooks or any of them timeout.\n' +
+    '\n' +
+    'Make sure your webhooks are highly available—especially during an AZ incident—and the failurePolicy is set properly to reject the resource or ignore the failure. Do not call webhooks when not needed by allowing --dry-run kubectl commands to bypass the webhook.');
+  console.log(result);
+});
+
