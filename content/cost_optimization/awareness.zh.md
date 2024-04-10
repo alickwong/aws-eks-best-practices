@@ -10,11 +10,11 @@
 
 #### EKS 控制平面和 EKS Fargate 成本
 
-使用过滤器,我们可以查询 EKS 控制平面和 Fargate Pod 产生的成本,如下图所示:
+使用过滤器,我们可以查询如下图所示的 EKS 控制平面和 Fargate Pod 的发生的成本:
 
 ![Cost Explorer - EKS Control Plane](../images/eks-controlplane-costexplorer.png)
 
-使用过滤器,我们可以查询 EKS 中 Fargate Pod 在各个区域产生的总成本,包括 vCPU-Hours 和 GB Hrs,如下图所示:
+使用过滤器,我们可以查询如下图所示的 EKS 中 Fargate Pod 在各个区域产生的总成本,包括 vCPU-Hours 和 GB Hrs:
 
 ![Cost Explorer - EKS Fargate](../images/eks-fargate-costexplorer.png)
 
@@ -22,7 +22,7 @@
 
 Amazon EKS 支持[添加 AWS 标签](https://docs.aws.amazon.com/eks/latest/userguide/eks-using-tags.html)到您的 Amazon EKS 集群。这使得轻松控制对 EKS API 的访问以管理您的集群。添加到 EKS 集群的标签特定于 AWS EKS 集群资源,它们不会传播到集群使用的其他 AWS 资源,如 EC2 实例或负载均衡器。目前,通过 AWS API、控制台和 SDK,支持为所有新的和现有的 EKS 集群进行集群标记。
 
-AWS Fargate 是一项提供按需、大小合适的容器计算能力的技术。在您的集群中调度 pod 到 Fargate 之前,您必须定义至少一个 Fargate 配置文件,该配置文件指定哪些 pod 在启动时应使用 Fargate。
+AWS Fargate 是一项提供按需、大小合适的容器计算能力的技术。在您的集群中可以在 Fargate 上调度 pod 之前,您必须定义至少一个 Fargate 配置文件,该配置文件指定哪些 pod 在启动时应使用 Fargate。
 
 添加和列出 EKS 集群的标签:
 ```
@@ -43,28 +43,28 @@ $ aws eks list-tags-for-resource --resource-arn arn:aws:eks:us-west-2:xxx:cluste
 
 ### 使用 AWS Trusted Advisor
 
-AWS Trusted Advisor 提供了一套丰富的最佳实践检查和建议,涵盖成本优化、安全性、容错能力、性能和服务限制等五个类别。
+AWS Trusted Advisor 提供了一套丰富的最佳实践检查和建议,涵盖五个类别:成本优化、安全性、容错性、性能和服务限制。
 
-对于成本优化,Trusted Advisor 可帮助消除未使用和空闲的资源,并建议做出预留容量的承诺。将有助于 Amazon EKS 的关键行动项目包括低利用率的 EC2 实例、未关联的弹性 IP 地址、空闲的负载均衡器、未充分利用的 EBS 卷等。完整的检查列表可在 https://aws.amazon.com/premiumsupport/technology/trusted-advisor/best-practice-checklist/ 找到。
+对于成本优化,Trusted Advisor 可帮助消除未使用和空闲的资源,并建议做出预留容量的承诺。对于 Amazon EKS 来说,关键的行动项目将围绕低利用率的 EC2 实例、未关联的弹性 IP 地址、空闲的负载均衡器、未充分利用的 EBS 卷等。完整的检查列表可在 https://aws.amazon.com/premiumsupport/technology/trusted-advisor/best-practice-checklist/ 找到。
 
-Trusted Advisor 还为 EC2 实例和 Fargate 提供了节省计划和预留实例的建议,允许您承诺一致的使用量以换取折扣费率。
+Trusted Advisor 还为 EC2 实例和 Fargate 提供了节省计划和预留实例的建议,这允许您承诺一致的使用量以换取折扣费率。
 
 !!! 注意
-    Trusted Advisor 的建议是通用建议,而不是特定于 EKS 的。
+    Trusted Advisor 的建议是一般性建议,而不是特定于 EKS 的建议。
 
 ### 使用 Kubernetes 仪表板
 
 ***Kubernetes 仪表板***
 
-Kubernetes 仪表板是一个通用的基于 Web 的 Kubernetes 集群 UI,提供有关 Kubernetes 集群的信息,包括集群、节点和 pod 级别的资源使用情况。在 Amazon EKS 集群上部署 Kubernetes 仪表板的说明在 [Amazon EKS 文档](https://docs.aws.amazon.com/eks/latest/userguide/dashboard-tutorial.html)中有描述。
+Kubernetes 仪表板是一个通用的基于 Web 的 Kubernetes 集群 UI,提供有关 Kubernetes 集群的信息,包括集群、节点和 pod 级别的资源使用情况。在 Amazon EKS 集群上部署 Kubernetes 仪表板的过程在 [Amazon EKS 文档](https://docs.aws.amazon.com/eks/latest/userguide/dashboard-tutorial.html)中有描述。
 
 仪表板提供了每个节点和 pod 的资源使用情况细分,以及 pod、服务、部署和其他 Kubernetes 对象的详细元数据。这些综合信息提供了对 Kubernetes 环境的可见性。
 
-![Kubernetes 仪表板](../images/kubernetes-dashboard.png)
+![Kubernetes Dashboard](../images/kubernetes-dashboard.png)
 
 ***kubectl top 和 describe 命令***
 
-使用 kubectl top 和 kubectl describe 命令查看资源使用指标。kubectl top 将显示您集群中 pod 或节点的当前 CPU 和内存使用情况,或特定 pod 或节点的使用情况。kubectl describe 命令将提供有关特定节点或 pod 的更详细信息。
+使用 kubectl top 和 kubectl describe 命令查看资源使用指标。kubectl top 将显示集群中 pod 或节点的当前 CPU 和内存使用情况,或特定 pod 或节点的使用情况。kubectl describe 命令将提供有关特定节点或 pod 的更详细信息。
 ```
 $ kubectl top pods
 $ kubectl top nodes
@@ -80,12 +80,12 @@ $ kubectl describe pod <pod>
 
 *kubectl describe* 返回每个资源请求或限制所占总可用容量的百分比。
 
-kubectl top 和 describe 跟踪 Kubernetes pod、节点和容器的关键资源(如 CPU、内存和存储)的利用率和可用性。这种意识将有助于了解资源使用情况并有助于控制成本。
+kubectl top 和 describe 跟踪 Kubernetes pod、节点和容器的关键资源(如 CPU、内存和存储)的利用率和可用性。这种意识将有助于理解资源使用情况并有助于控制成本。
 
 
 ### 使用 CloudWatch 容器洞察
 
-使用 [CloudWatch 容器洞察](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/deploy-container-insights-EKS.html)收集、聚合和汇总您的容器化应用程序和微服务的指标和日志。容器洞察适用于 Amazon Elastic Kubernetes Service on EC2 和 Amazon EC2 上的 Kubernetes 平台。指标包括 CPU、内存、磁盘和网络的利用率。
+使用 [CloudWatch 容器洞察](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/deploy-container-insights-EKS.html)收集、聚合和汇总您的容器化应用程序和微服务的指标和日志。容器洞察适用于在 EC2 上运行的 Amazon Elastic Kubernetes Service,以及在 Amazon EC2 上运行的 Kubernetes 平台。指标包括 CPU、内存、磁盘和网络的利用率。
 
 洞察的安装在[文档](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/deploy-container-insights-EKS.html)中给出。
 
@@ -111,7 +111,7 @@ stats floor(avg(container_filesystem_usage/1024)) as container_filesystem_usage_
 
 更多示例查询可在[容器洞察文档](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Container-Insights-view-metrics.html)中找到
 
-这种意识将有助于了解资源使用情况并有助于控制成本。
+这种意识将有助于理解资源使用情况并有助于控制成本。
 
 
 
@@ -146,16 +146,16 @@ NOTES:
 Next, navigate to http://localhost:9090 in a web browser.
 $ kubectl port-forward --namespace kubecost deployment/kubecost-cost-analyzer 9090
 
-Note: If you are using Cloud 9 or have a need to forward it to a different port like 8080, issue the following command
+注意:如果您使用 Cloud 9 或需要将其转发到不同的端口(如 8080),请使用以下命令
 $ kubectl port-forward --namespace kubecost deployment/kubecost-cost-analyzer 8080:9090
 
 ```
 Kube Cost 仪表板 -
-![Kubernetes 集群自动缩放器日志](../images/kube-cost.png)
+![Kubernetes Cluster Auto Scaler logs](../images/kube-cost.png)
 
 ### 使用 Kubernetes 成本分配和容量规划分析工具
 
-[Kubernetes Opex Analytics](https://github.com/rchakode/kube-opex-analytics) 是一个工具,可帮助组织跟踪其 Kubernetes 集群消耗的资源,以防止过度支付。为此,它生成短期(7 天)、中期(14 天)和长期(12 个月)的使用报告,显示每个项目随时间推移所消耗的资源金额的相关见解。
+[Kubernetes Opex Analytics](https://github.com/rchakode/kube-opex-analytics) 是一个工具,可帮助组织跟踪其 Kubernetes 集群消耗的资源,以防止过度支付。为此,它生成显示项目随时间推移所消耗资源金额的短期(7 天)、中期(14 天)和长期(12 个月)使用报告。
 
 ![Kubernetes Opex Analytics](../images/kube-opex-analytics.png)
 
@@ -166,11 +166,11 @@ Kube Cost 仪表板 -
 
 ### Spot.io,以前称为 Spotinst
 
-Spotinst Ocean 是一项应用程序缩放服务。与 Amazon Elastic Compute Cloud (Amazon EC2) Auto Scaling 组类似,Spotinst Ocean 旨在通过利用 Spot 实例与按需和预留实例的组合来优化性能和成本。通过自动化的 Spot 实例管理和各种实例大小的组合,Ocean 集群自动缩放器根据 pod 资源需求进行缩放。Spotinst Ocean 还包括一种预测算法,可在 Spot 实例中断前 15 分钟预测中断并在不同的 Spot 容量池中启动新节点。
+Spotinst Ocean 是一项应用程序扩展服务。与 Amazon Elastic Compute Cloud (Amazon EC2) Auto Scaling 组类似,Spotinst Ocean 旨在通过利用 Spot 实例与按需和预留实例的组合来优化性能和成本。通过自动化的 Spot 实例管理和各种实例大小的组合,Ocean 集群自动缩放器根据 pod 资源需求进行扩展。Spotinst Ocean 还包括一种预测算法,可在 Spot 实例中断前 15 分钟预测中断并在不同的 Spot 容量池中启动新节点。
 
-这可作为 [AWS Quickstart](https://aws.amazon.com/quickstart/architecture/spotinst-ocean-eks/) 由 Spotinst, Inc. 与 AWS 合作开发。
+这可作为 Spotinst, Inc. 与 AWS 合作开发的 [AWS Quickstart](https://aws.amazon.com/quickstart/architecture/spotinst-ocean-eks/) 使用。
 
-EKS 研讨会也有一个关于[优化 Amazon EKS 管理的工作节点](https://eksworkshop.com/beginner/190_ocean/)的模块,其中包括成本分配、合理调整和缩放策略等部分。
+EKS 研讨会也有一个模块[在 Amazon EKS 上优化工作节点管理](https://eksworkshop.com/beginner/190_ocean/),其中包括成本分配、合理调整和扩展策略等部分。
 
 ### Yotascale
 
@@ -207,12 +207,12 @@ cd kube-ops-view
 kubectl apply -k deploy/
 ```
 
-![主页](../images/kube-ops-report.png)
+![Home Page](../images/kube-ops-report.png)
 
 
-### Popeye - A Kubernetes 集群卫生检查器
+### Popeye - A Kubernetes 集群卫生工具
 
-[Popeye - A Kubernetes 集群卫生检查器](https://github.com/derailed/popeye)是一个扫描实时 Kubernetes 集群并报告部署资源和配置的潜在问题的实用程序。它基于部署的内容对集群进行卫生检查,而不是基于磁盘上的内容。通过扫描您的集群,它可以检测到配置错误,并帮助您确保最佳实践得到遵守。
+[Popeye - A Kubernetes 集群卫生工具](https://github.com/derailed/popeye)是一个扫描实时 Kubernetes 集群并报告部署资源和配置的潜在问题的实用程序。它基于部署的内容对集群进行卫生检查,而不是基于磁盘上的内容。通过扫描您的集群,它可以检测到配置错误,并帮助您确保应用了最佳实践。
 
 ### 资源
 请参考以下资源了解有关成本优化最佳实践的更多信息。
@@ -223,7 +223,7 @@ kubectl apply -k deploy/
 工具
 +	[什么是 AWS 账单和成本管理?](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
 +	[Amazon CloudWatch 容器洞察](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/ContainerInsights.html)
-+   [如何使用 Kubecost 跟踪 Amazon EKS 集群中的成本](https://aws.amazon.com/blogs/containers/how-to-track-costs-in-multi-tenant-amazon-eks-clusters-using-kubecost/) 
++   [如何使用 Kubecost 跟踪多租户 Amazon EKS 集群的成本](https://aws.amazon.com/blogs/containers/how-to-track-costs-in-multi-tenant-amazon-eks-clusters-using-kubecost/) 
 +   [Kube Cost](https://kubecost.com/)
 +   [Kube Opsview](https://github.com/hjacobs/kube-ops-view)
 +  [Kube Janitor](https://github.com/hjacobs/kube-janitor)
