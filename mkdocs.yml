@@ -154,6 +154,7 @@ plugins:
             Network Security: 网络安全
             Networking: 网络
             Node efficiency and scaling: 节点效率和扩展
+            Known limits and service quotas: 已知限制和服务配额
             Observability: 可观察性
             Pod Security: Pod 安全
             Pod Security for Windows Containers: Windows 容器的 Pod 安全
